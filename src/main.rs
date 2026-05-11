@@ -56,9 +56,10 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         match event {
             Ok(event) => {
                 if let Some(path) = event.paths.first() {
-                    if path.starts_with(&unused_folder) {
-                        continue; // Skip unused folder events
-                    }
+                    // Ignore unused folder directives, as these don't really make sense
+                    // if path.starts_with(&unused_folder) {
+                    //     continue; // Skip unused folder events
+                    // }
 
                     if let Err(e) = handle_file_event(path, &downloads_folder) {
                         log_error(&e.to_string());
@@ -112,7 +113,7 @@ fn handle_file_event(path: &Path, downloads_folder: &Path) -> Result<(), std::io
     }
 
     if let Some(extension) = path.extension() {
-        if extension == "tmp" {
+        if extension == "tmp" || "crdownload" {
             println!("Ignoring temporary file: {}", path.display());
             return Ok(());
         }
@@ -154,32 +155,26 @@ fn handle_unused_files_recursively(downloads_folder: &Path, unused_folder: &Path
         let entry = entry?;
         let path = entry.path();
 
-        if path == *unused_folder {
-            continue;
-        }
+        // if path == *unused_folder {
+        //     continue;
+        // }
 
         if path.is_dir() {
-            handle_unused_files_recursively(&path, unused_folder)?;
+            // Move to Folder, do not recurse as we don't wanna mangle paths of user directories dumbass.
+            // handle_unused_files_recursively(&path, unused_folder)?;
+            // Move to Folders/&path.
         } else if path.is_file() {
+            // We don't wanna mess with user files, even if they are unused, this also makes no sense.
             println!("Checking file for unused status: {}", path.display());
             log_event(&format!("Checking file for unused status: {}", path.display()));
-            move_unused_files(&path, unused_folder)?;
+            // move_unused_files(&path, unused_folder)?;
         }
     }
     Ok(())
 }
 
 fn move_file_to_specific_folder(path: &Path, downloads_folder: &Path) -> Result<(), std::io::Error> {
-    let target_dir = match path.extension().and_then(|ext| ext.to_str()) {
-        Some(ext) => match ext.to_lowercase().as_str() {
-            "jpg" | "png" | "gif" | "bmp" | "tiff" | "svg" | "webp" => "Images",
-            "mp4" | "mkv" | "avi" | "mov" | "flv" | "wmv" | "webm" | "mpeg" => "Videos",
-            "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" | "txt" | "csv" => "Documents",
-            "zip" | "rar" | "7z" | "tar" | "gz" | "bz2" | "xz" => "Archives",
-            _ => "Others",
-        },
-        None => "Others",
-    };
+    let target_dir = extension_mapping(&path);
 
     let target_path = downloads_folder.join(target_dir);
     fs::create_dir_all(&target_path)?;
@@ -201,13 +196,8 @@ fn move_file_to_specific_folder(path: &Path, downloads_folder: &Path) -> Result<
     Ok(())
 }
 
-fn move_unused_files(path: &Path, unused_folder: &Path) -> Result<(), std::io::Error> {
-    let cutoff_time = SystemTime::now() - Duration::days(30).to_std().unwrap();
-
-    if let Ok(metadata) = fs::metadata(&path) {
-        if let Ok(modified) = metadata.modified() {
-            if modified < cutoff_time {
-                let target_dir = match path.extension().and_then(|ext| ext.to_str()) {
+fn extension_mapping(path: &Path) -> &Path {
+    let result = match path.extension().and_then(|ext| ext.to_str()) {
                     Some(ext) => match ext.to_lowercase().as_str() {
                         "jpg" | "png" | "gif" | "bmp" | "tiff" | "svg" | "webp" => "Images",
                         "mp4" | "mkv" | "avi" | "mov" | "flv" | "wmv" | "webm" | "mpeg" => "Videos",
@@ -217,6 +207,16 @@ fn move_unused_files(path: &Path, unused_folder: &Path) -> Result<(), std::io::E
                     },
                     None => "Others",
                 };
+    return result
+}
+
+fn move_unused_files(path: &Path, unused_folder: &Path) -> Result<(), std::io::Error> {
+    let cutoff_time = SystemTime::now() - Duration::days(30).to_std().unwrap();
+
+    if let Ok(metadata) = fs::metadata(&path) {
+        if let Ok(modified) = metadata.modified() {
+            if modified < cutoff_time {
+                let target_dir = let target_dir = extension_mapping(&path);
 
                 let target_path = unused_folder.join(target_dir);
                 fs::create_dir_all(&target_path)?;
