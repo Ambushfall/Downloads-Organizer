@@ -202,8 +202,8 @@ fn move_file_to_specific_folder(path: &Path, downloads_folder: &Path) -> Result<
 
     if new_path != path {
         fs::rename(path, &new_path)?;
-        println!("Moved '{}' to '{}'", path.display(), target_dir.display());
-        log_event(&format!("Moved '{}' to '{}'", path.display(), target_dir.display()));
+        println!("Moved '{}' to '{}'", path.display(), target_dir);
+        log_event(&format!("Moved '{}' to '{}'", path.display(), target_dir));
 
         send_notification(file_name.to_string_lossy().as_ref(), target_dir.to_string_lossy().as_ref(),)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
