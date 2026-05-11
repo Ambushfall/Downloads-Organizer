@@ -232,7 +232,7 @@ fn move_unused_files(path: &Path, unused_folder: &Path) -> Result<(), std::io::E
     if let Ok(metadata) = fs::metadata(&path) {
         if let Ok(modified) = metadata.modified() {
             if modified < cutoff_time {
-                let target_dir = let target_dir = extension_mapping(&path);
+                let target_dir = extension_mapping(&path);
 
                 let target_path = unused_folder.join(target_dir);
                 fs::create_dir_all(&target_path)?;
