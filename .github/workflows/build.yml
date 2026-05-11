@@ -13,11 +13,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2 # Just add this before your build steps
 
       - name: Build Executable (downloadManager)
         run: |
