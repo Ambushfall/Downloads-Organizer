@@ -12,11 +12,12 @@ use report::generate_html_report;
 
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let downloads_folder = dirs::download_dir().expect("Failed to locate Downloads folder");
-    let unused_folder = downloads_folder.join("Unused");
+    let folders_folder = downloads_folder.join("Folders");
+    // let unused_folder = downloads_folder.join("Unused");
     let report_file = downloads_folder.join("Weekly_Report.html");
     let report_status_file = downloads_folder.join("report_status.txt");
 
-    fs::create_dir_all(&unused_folder)?;
+    // fs::create_dir_all(&unused_folder)?;
 
     // Generate initial report if it doesn't exist
     if !report_file.exists() {
@@ -75,7 +76,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if elapsed >= 60 {
             println!("Starting periodic scan for unused files...");
             log_event("Starting periodic scan for unused files...");
-            if let Err(e) = handle_unused_files_recursively(&downloads_folder, &unused_folder) {
+            if let Err(e) = handle_unused_files_recursively(&downloads_folder, &folders_folder) {
                 log_error(&e.to_string());
                 eprintln!("Error during periodic scan: {}", e);
             }
@@ -155,14 +156,29 @@ fn handle_unused_files_recursively(downloads_folder: &Path, unused_folder: &Path
         let entry = entry?;
         let path = entry.path();
 
-        // if path == *unused_folder {
-        //     continue;
-        // }
+        if path == *unused_folder {
+            continue;
+        }
 
         if path.is_dir() {
             // Move to Folder, do not recurse as we don't wanna mangle paths of user directories dumbass.
             // handle_unused_files_recursively(&path, unused_folder)?;
             // Move to Folders/&path.
+            let target_path = downloads_folder.join(unused_folder);
+            let file_name = path.file_name().ok_or_else(|| {
+                std::io::Error::new(std::io::ErrorKind::Other, "Failed to get file name")
+            })?;
+            let new_path = target_path.join(file_name);
+        
+            if new_path != path {
+                fs::rename(path, &new_path)?;
+                println!("Moved '{}' to '{}'", path.display(), target_dir);
+                log_event(&format!("Moved '{}' to '{}'", path.display(), target_dir));
+        
+                send_notification(file_name.to_string_lossy().as_ref(), target_dir)
+                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+            }
+            
         } else if path.is_file() {
             // We don't wanna mess with user files, even if they are unused, this also makes no sense.
             println!("Checking file for unused status: {}", path.display());
@@ -255,7 +271,7 @@ fn log_error(message: &str) {
     }
 }
 
-fn log_event(message: &str) {
+fn log_event(message: &str, is_error: bool) {
     if let Some(logs_dir) = dirs::home_dir().map(|dir| dir.join("file_monitor_logs.txt")) {
         if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(&logs_dir) {
             let _ = writeln!(
