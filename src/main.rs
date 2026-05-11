@@ -172,7 +172,7 @@ fn handle_unused_files_recursively(downloads_folder: &Path, unused_folder: &Path
         
             if new_path != path {
                 fs::rename(path, &new_path)?;
-                println!("Moved '{}' to '{}'", path.display(), target_path);
+                println!("Moved '{}' to '{}'", path.display(), target_path.display());
                 log_event(&format!("Moved '{}' to '{}'", path.display(), target_path.display()));
         
                 send_notification(file_name.to_string_lossy().as_ref(), target_path.display())
