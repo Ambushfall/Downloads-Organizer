@@ -15,13 +15,14 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.5
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
 
       - name: Build Executable (downloadManager)
         env:
-          SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
+          # This tells Swatinem to include sccache if present
+          # and optimizes target directory caching
+          CARGO_INCREMENTAL: 0 
         run: |
           cargo build --release --bin downloadManager
           echo "Application (downloadManager) built successfully."
