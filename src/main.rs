@@ -172,10 +172,10 @@ fn handle_unused_files_recursively(downloads_folder: &Path, unused_folder: &Path
         
             if new_path != path {
                 fs::rename(path, &new_path)?;
-                println!("Moved '{}' to '{}'", path.display(), target_dir);
-                log_event(&format!("Moved '{}' to '{}'", path.display(), target_dir));
+                println!("Moved '{}' to '{}'", path.display(), target_path);
+                log_event(&format!("Moved '{}' to '{}'", path.display(), target_path));
         
-                send_notification(file_name.to_string_lossy().as_ref(), target_dir)
+                send_notification(file_name.to_string_lossy().as_ref(), target_path)
                     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
             }
             
