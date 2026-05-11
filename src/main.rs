@@ -271,7 +271,7 @@ fn log_error(message: &str) {
     }
 }
 
-fn log_event(message: &str, is_error: bool) {
+fn log_event(message: &str) {
     if let Some(logs_dir) = dirs::home_dir().map(|dir| dir.join("file_monitor_logs.txt")) {
         if let Ok(mut file) = fs::OpenOptions::new().create(true).append(true).open(&logs_dir) {
             let _ = writeln!(
