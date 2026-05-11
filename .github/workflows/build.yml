@@ -25,7 +25,7 @@ jobs:
           echo "Application (downloadManager) built successfully."
 
       - name: Upload Executable Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: downloadManager-executable
           path: target/release/downloadManager
