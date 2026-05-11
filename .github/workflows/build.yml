@@ -10,15 +10,18 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Rust
-        uses: Swatinem/rust-cache@v2 # Just add this before your build steps
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.5
 
       - name: Build Executable (downloadManager)
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
         run: |
           cargo build --release --bin downloadManager
           echo "Application (downloadManager) built successfully."
