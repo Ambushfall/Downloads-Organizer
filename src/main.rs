@@ -114,7 +114,7 @@ fn handle_file_event(path: &Path, downloads_folder: &Path) -> Result<(), std::io
     }
 
     if let Some(extension) = path.extension() {
-        if extension == "tmp" || "crdownload" {
+        if extension == "tmp" || extension == "crdownload" {
             println!("Ignoring temporary file: {}", path.display());
             return Ok(());
         }
@@ -173,9 +173,9 @@ fn handle_unused_files_recursively(downloads_folder: &Path, unused_folder: &Path
             if new_path != path {
                 fs::rename(path, &new_path)?;
                 println!("Moved '{}' to '{}'", path.display(), target_path);
-                log_event(&format!("Moved '{}' to '{}'", path.display(), target_path));
+                log_event(&format!("Moved '{}' to '{}'", path.display(), target_path.display()));
         
-                send_notification(file_name.to_string_lossy().as_ref(), target_path)
+                send_notification(file_name.to_string_lossy().as_ref(), target_path.display())
                     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
             }
             
