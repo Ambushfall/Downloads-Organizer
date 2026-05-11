@@ -1,10 +1,8 @@
 name: Build and Upload Executable
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
+on: 
+  workflow_dispatch:
+  push: 
 
 jobs:
   build:
